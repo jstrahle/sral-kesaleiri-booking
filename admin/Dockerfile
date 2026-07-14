@@ -1,5 +1,5 @@
 # --- Kaannosvaihe -----------------------------------------------------------
-FROM docker.io/library/node:22-alpine AS build
+FROM docker.io/library/node:26-alpine AS build
 
 WORKDIR /app
 COPY package.json package-lock.json* ./
@@ -13,7 +13,7 @@ RUN npm run build
 RUN npm prune --omit=dev
 
 # --- Ajovaihe ---------------------------------------------------------------
-FROM docker.io/library/node:22-alpine
+FROM docker.io/library/node:26-alpine
 
 ENV NODE_ENV=production
 WORKDIR /app
