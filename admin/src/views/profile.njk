@@ -1,0 +1,22 @@
+{% extends "layout.njk" %}
+{% block content %}
+<div class="card narrow">
+  <h1>Oma salasana</h1>
+
+  {% if done %}<p class="ok">Salasana vaihdettu.</p>{% endif %}
+  {% if error %}<p class="error">{{ error }}</p>{% endif %}
+
+  <form method="post" action="/profile/password">
+    <label for="currentPassword">Nykyinen salasana</label>
+    <input type="password" id="currentPassword" name="currentPassword" autocomplete="current-password" required>
+
+    <label for="newPassword">Uusi salasana</label>
+    <input type="password" id="newPassword" name="newPassword" autocomplete="new-password" minlength="12" required>
+
+    <label for="confirmPassword">Uusi salasana uudelleen</label>
+    <input type="password" id="confirmPassword" name="confirmPassword" autocomplete="new-password" minlength="12" required>
+
+    <button type="submit" class="primary">Vaihda salasana</button>
+  </form>
+</div>
+{% endblock %}

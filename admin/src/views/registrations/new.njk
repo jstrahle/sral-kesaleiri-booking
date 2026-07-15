@@ -1,0 +1,96 @@
+{% extends "layout.njk" %}
+{% block content %}
+
+<div class="counters">
+  <div class="counter">
+    <span class="counter-value" id="count-total">{{ counts.total }}</span>
+    <span class="counter-label">ilmoittautunutta</span>
+  </div>
+  <div class="counter secondary">
+    <span class="counter-value" id="count-today">{{ counts.today }}</span>
+    <span class="counter-label">tänään</span>
+  </div>
+</div>
+
+<div class="card">
+  <h1>Uusi rekisteröinti</h1>
+
+  {% if saved %}<p class="ok">{{ saved }} rekisteröity.</p>{% endif %}
+
+  {% if duplicate %}
+  <div class="warn-box">
+    <strong>Kutsumerkki {{ duplicate.callsign }} on jo rekisteröity.</strong>
+    <p>
+      {{ duplicate.name }} · {{ duplicate.type_name }} · {{ duplicate.registered_at | pvm }}
+      {% if duplicate.registered_by_name %}· kirjasi {{ duplicate.registered_by_name }}{% endif %}
+    </p>
+    <p>
+      Samaa kutsumerkkiä ei voi rekisteröidä kahdesti. Jos kyseessä on eri henkilö
+      (esimerkiksi puoliso), käytä omaa päätettä, kuten {{ duplicate.callsign }}/XYL.
+    </p>
+    <a href="/registrations/{{ duplicate.id }}" class="button">Avaa alkuperäinen rekisteröinti</a>
+  </div>
+  {% endif %}
+
+  {% if error %}<p class="error">{{ error }}</p>{% endif %}
+
+  {% if types.length == 0 %}
+    <p class="error">
+      Osallistujatyyppejä ei ole määritelty. Pääkäyttäjän on luotava vähintään yksi
+      aktiivinen tyyppi ennen rekisteröintiä.
+    </p>
+  {% else %}
+  <form method="post" action="/registrations" autocomplete="off">
+    <label for="callsign">Kutsumerkki</label>
+    <div class="row">
+      <input type="text" id="callsign" name="callsign" value="{{ form.callsign if form }}"
+             autocapitalize="characters" spellcheck="false" autofocus required>
+      <button type="button" id="guest-button" class="button">Ei kutsua</button>
+    </div>
+
+    <label for="name">Nimi</label>
+    <input type="text" id="name" name="name" value="{{ form.name if form }}" required>
+
+    <label for="participantTypeId">Osallistujatyyppi</label>
+    <select id="participantTypeId" name="participantTypeId" required>
+      {% for t in types %}
+      <option value="{{ t.id }}" {{ 'selected' if form and form.typeId == t.id }}>
+        {{ t.name }} – {{ t.fee_cents | euro }}
+      </option>
+      {% endfor %}
+    </select>
+
+    <label class="checkbox">
+      <input type="checkbox" name="hidden" {{ 'checked' if form and form.hidden }}>
+      Ei näytetä julkisesti
+    </label>
+
+    <button type="submit" class="primary big">Tallenna rekisteröinti</button>
+  </form>
+  {% endif %}
+</div>
+
+{% if latest.length > 0 %}
+<div class="card">
+  <div class="card-header">
+    <h2>Viimeisimmät</h2>
+    <a href="/registrations">Kaikki rekisteröinnit</a>
+  </div>
+  <table>
+    <tbody>
+      {% for r in latest %}
+      <tr>
+        <td class="call"><a href="/registrations/{{ r.id }}">{{ r.callsign }}</a></td>
+        <td>{{ r.name }}</td>
+        <td class="muted">{{ r.type_name }}</td>
+        <td class="muted">{{ r.registered_at | pvm }}</td>
+        <td>{% if r.hidden %}<span class="tag off">Piilotettu</span>{% endif %}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endif %}
+
+<script src="/static/registration.js" defer></script>
+{% endblock %}

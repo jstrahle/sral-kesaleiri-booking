@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="fi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ title | default('Hallinta') }} – Kesäleirin rekisteröinti</title>
+  <link rel="stylesheet" href="/static/app.css">
+</head>
+<body>
+{% if user %}
+<header class="topbar">
+  <nav>
+    <a href="/" class="brand">Kesäleiri</a>
+    <a href="/">Ilmoittautuminen</a>
+    {% if user.role == 'admin' %}<a href="/stats">Tilastot</a>{% endif %}
+    {% if user.role == 'admin' %}<a href="/import">Massatuonti</a>{% endif %}
+    {% if user.role == 'admin' %}<a href="/types">Osallistujatyypit</a>{% endif %}
+    {% if user.role == 'admin' %}<a href="/privacy">Tietosuojaseloste</a>{% endif %}
+    {% if user.role == 'admin' %}<a href="/users">Käyttäjät</a>{% endif %}
+  </nav>
+  <div class="topbar-right">
+    <a href="/profile">{{ user.displayName }}</a>
+    <form method="post" action="/logout" class="inline">
+      <button type="submit" class="link">Kirjaudu ulos</button>
+    </form>
+  </div>
+</header>
+{% endif %}
+
+<main>
+  {% block content %}{% endblock %}
+</main>
+</body>
+</html>

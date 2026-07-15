@@ -1,0 +1,18 @@
+{% extends "layout.njk" %}
+{% block title %}Kesäleiri – ilmoittautuneet{% endblock %}
+{% block bodyclass %}wall{% endblock %}
+{% block body %}
+
+<div class="wall-count">
+  <span id="total" class="wall-number" data-total="{{ total }}">{{ total }}</span>
+  <span class="wall-label">ilmoittautunutta</span>
+</div>
+
+<ul class="wall-calls" id="calls">
+  {% for r in latest %}
+  <li><span class="call">{{ r.callsign }}</span></li>
+  {% endfor %}
+</ul>
+
+<script src="/static/public.js" defer></script>
+{% endblock %}

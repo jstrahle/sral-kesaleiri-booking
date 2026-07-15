@@ -1,0 +1,17 @@
+{% extends "layout.njk" %}
+{% block title %}Tietosuojaseloste – Radioamatöörien kesäleiri{% endblock %}
+{% block body %}
+
+<header class="page-header">
+  <a href="/" class="back">&larr; Takaisin</a>
+  <h1>Tietosuojaseloste</h1>
+</header>
+
+<main>
+  {% if content %}
+    <div class="policy-text">{{ content }}</div>
+  {% else %}
+    <p class="empty">Tietosuojaselostetta ei ole vielä julkaistu.</p>
+  {% endif %}
+</main>
+{% endblock %}

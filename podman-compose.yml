@@ -1,0 +1,150 @@
+version: "3.8"
+
+# Verkkojen jako on turvallisuuden ydin:
+#   admin-net   : vain hallintapalvelu + hallinnan tietokanta
+#   public-net  : vain julkinen palvelu + julkinen tietokanta
+#   edge-net    : Caddy, hallintapalvelu, julkinen palvelu
+#
+# Julkisella palvelulla EI ole reittia hallinnan tietokantaan.
+# Synkronointi kulkee edge-netin yli AINA suuntaan admin -> public.
+
+networks:
+  # Sisaverkot: EI ulospaasya internetiin eika muihin kontteihin.
+  # Tama on tietoturvan ydin - julkinen palvelu ei nae hallinnan tietokantaa.
+  admin-net:
+    driver: bridge
+    internal: true
+  public-net:
+    driver: bridge
+    internal: true
+  # Reunaverkko: taalla on internet-yhteys (Caddyn ACME-sertifikaatit,
+  # ulospaasy). Ei internal-lippua.
+  edge-net:
+    driver: bridge
+
+volumes:
+  admin-db-data:
+  public-db-data:
+  caddy-data:
+  caddy-config:
+  backups:
+
+services:
+  caddy:
+    image: docker.io/library/caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      ADMIN_DOMAIN: ${ADMIN_DOMAIN}
+      PUBLIC_DOMAIN: ${PUBLIC_DOMAIN}
+      ACME_EMAIL: ${ACME_EMAIL}
+    volumes:
+      - ./caddy/Caddyfile:/etc/caddy/Caddyfile:ro,Z
+      - caddy-data:/data:Z
+      - caddy-config:/config:Z
+    networks:
+      - edge-net
+    depends_on:
+      - admin
+      - public
+
+  admin-db:
+    image: docker.io/library/postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${ADMIN_DB_NAME}
+      POSTGRES_USER: ${ADMIN_DB_USER}
+      POSTGRES_PASSWORD: ${ADMIN_DB_PASSWORD}
+      TZ: ${TZ:-Europe/Helsinki}
+    volumes:
+      - admin-db-data:/var/lib/postgresql/data:Z
+    networks:
+      - admin-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  admin:
+    build:
+      context: ./admin
+    restart: unless-stopped
+    init: true
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      ADMIN_DOMAIN: ${ADMIN_DOMAIN}
+      DATABASE_URL: postgres://${ADMIN_DB_USER}:${ADMIN_DB_PASSWORD}@admin-db:5432/${ADMIN_DB_NAME}
+      PUBLIC_SYNC_URL: http://public:3000/internal/sync
+      SYNC_SHARED_SECRET: ${SYNC_SHARED_SECRET}
+      SESSION_SECRET: ${SESSION_SECRET}
+      BOOTSTRAP_ADMIN_USERNAME: ${BOOTSTRAP_ADMIN_USERNAME}
+      BOOTSTRAP_ADMIN_PASSWORD: ${BOOTSTRAP_ADMIN_PASSWORD}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      TZ: ${TZ:-Europe/Helsinki}
+    networks:
+      - admin-net
+      - edge-net
+    depends_on:
+      admin-db:
+        condition: service_healthy
+
+  public-db:
+    image: docker.io/library/postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${PUBLIC_DB_NAME}
+      POSTGRES_USER: ${PUBLIC_DB_USER}
+      POSTGRES_PASSWORD: ${PUBLIC_DB_PASSWORD}
+      TZ: ${TZ:-Europe/Helsinki}
+    volumes:
+      - public-db-data:/var/lib/postgresql/data:Z
+    networks:
+      - public-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  public:
+    build:
+      context: ./public
+    restart: unless-stopped
+    init: true
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      DATABASE_URL: postgres://${PUBLIC_DB_USER}:${PUBLIC_DB_PASSWORD}@public-db:5432/${PUBLIC_DB_NAME}
+      SYNC_SHARED_SECRET: ${SYNC_SHARED_SECRET}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      TZ: ${TZ:-Europe/Helsinki}
+    networks:
+      - public-net
+      - edge-net
+    depends_on:
+      public-db:
+        condition: service_healthy
+
+  backup:
+    image: docker.io/library/postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      PGPASSWORD: ${ADMIN_DB_PASSWORD}
+      ADMIN_DB_NAME: ${ADMIN_DB_NAME}
+      ADMIN_DB_USER: ${ADMIN_DB_USER}
+      BACKUP_RETENTION_DAYS: ${BACKUP_RETENTION_DAYS:-14}
+      BACKUP_INTERVAL_SECONDS: ${BACKUP_INTERVAL_SECONDS:-3600}
+      TZ: ${TZ:-Europe/Helsinki}
+    volumes:
+      - backups:/backups:Z
+      - ./scripts/backup.sh:/usr/local/bin/backup.sh:ro,Z
+    networks:
+      - admin-net
+    entrypoint: ["/bin/sh", "-c", "while true; do /bin/sh /usr/local/bin/backup.sh; sleep \"${BACKUP_INTERVAL_SECONDS:-3600}\"; done"]
+    depends_on:
+      admin-db:
+        condition: service_healthy

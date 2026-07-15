@@ -1,0 +1,76 @@
+{% extends "layout.njk" %}
+{% block title %}Radioamatöörien kesäleiri – ilmoittautuneet{% endblock %}
+{% block body %}
+
+<header class="hero">
+  <p class="kicker">Radioamatöörien kesäleiri</p>
+  <div class="hero-count">
+    <span id="total" class="hero-number" data-total="{{ total }}">{{ total }}</span>
+    <span class="hero-label">ilmoittautunutta</span>
+  </div>
+  <p class="hero-live"><span class="dot"></span> Päivittyy reaaliajassa</p>
+</header>
+
+<main>
+  <form method="get" action="/" class="search">
+    <input type="search" name="q" value="{{ query }}" placeholder="Hae kutsumerkillä" autocomplete="off">
+    <input type="hidden" name="jarjestys" value="{{ sort }}">
+    <button type="submit">Hae</button>
+  </form>
+
+  <div class="toolbar">
+    <span class="muted">
+      {% if query %}{{ result.total }} osumaa haulla “{{ query }}”{% else %}{{ result.total }} kutsumerkkiä luettelossa{% endif %}
+    </span>
+    <span class="sorts">
+      Järjestä:
+      <a href="/?q={{ query }}&jarjestys=aika" class="{{ 'active' if sort == 'aika' }}">uusin ensin</a>
+      <a href="/?q={{ query }}&jarjestys=kutsu" class="{{ 'active' if sort == 'kutsu' }}">kutsumerkki</a>
+    </span>
+  </div>
+
+  <p class="live-hint" id="live-hint" hidden>
+    <a href="/">Uusia ilmoittautumisia – näytä</a>
+  </p>
+
+  {% if result.rows.length == 0 %}
+    <p class="empty">Ei osumia.</p>
+  {% else %}
+  <ul class="calls" id="calls" data-live="{{ 'yes' if live else 'no' }}">
+    {% for r in result.rows %}
+    <li data-id="{{ r.id }}">
+      <span class="call">{{ r.callsign }}</span>
+      <span class="time">{{ r.registered_at | pvm }}</span>
+    </li>
+    {% endfor %}
+  </ul>
+  {% endif %}
+
+  {% if result.pages > 1 %}
+  <nav class="pages">
+    {% if result.page > 1 %}
+      <a href="/?q={{ query }}&jarjestys={{ sort }}&sivu={{ result.page - 1 }}">Edellinen</a>
+    {% endif %}
+    <span class="muted">Sivu {{ result.page }} / {{ result.pages }}</span>
+    {% if result.page < result.pages %}
+      <a href="/?q={{ query }}&jarjestys={{ sort }}&sivu={{ result.page + 1 }}">Seuraava</a>
+    {% endif %}
+  </nav>
+  {% endif %}
+</main>
+
+<footer>
+  <p class="muted small">
+    Luettelossa näkyvät vain kutsumerkki ja ilmoittautumisaika. Osallistuja voi halutessaan
+    jättäytyä pois luettelosta; laskuri kertoo kaikkien kävijöiden määrän.
+  </p>
+  <p class="muted small">
+    Voit peruuttaa suostumuksesi kutsutunnuksesi julkaisemiseen milloin tahansa tapahtuman
+    aikana tai sen jälkeen ilmoittamalla siitä järjestäjälle. Tällöin kutsutunnuksesi
+    poistetaan verkkosivuilta mahdollisimman pian. Lisätietoja asiasta ja henkilötietojen
+    käsittelystä löydät tapahtuman <a href="/tietosuoja">tietosuojaselosteesta</a>.
+  </p>
+</footer>
+
+<script src="/static/public.js" defer></script>
+{% endblock %}

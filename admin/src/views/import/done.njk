@@ -1,0 +1,12 @@
+{% extends "layout.njk" %}
+{% block content %}
+<div class="card narrow">
+  <h1>Tuonti valmis</h1>
+  <p class="ok">{{ result.added }} uutta rekisteröintiä lisätty.</p>
+  {% if result.skipped > 0 %}
+  <p class="muted">{{ result.skipped }} riviä ohitettiin (jo tuotu aiemmin).</p>
+  {% endif %}
+  <a href="/import" class="button primary">Uusi tuonti</a>
+  <a href="/registrations" class="button">Rekisteröinnit</a>
+</div>
+{% endblock %}

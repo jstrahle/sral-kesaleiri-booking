@@ -1,0 +1,52 @@
+{% extends "layout.njk" %}
+{% block content %}
+<div class="card narrow">
+  <h1>Korjaa rekisteröintiä</h1>
+
+  {% if error %}<p class="error">{{ error }}</p>{% endif %}
+
+  <form method="post" action="/registrations/{{ target.id }}" autocomplete="off">
+    <label for="callsign">Kutsumerkki</label>
+    <input type="text" id="callsign" name="callsign" value="{{ target.callsign }}"
+           autocapitalize="characters" spellcheck="false" required>
+
+    <label for="name">Nimi</label>
+    <input type="text" id="name" name="name" value="{{ target.name }}" required>
+
+    <label for="participantTypeId">Osallistujatyyppi</label>
+    <select id="participantTypeId" name="participantTypeId" required>
+      {% for t in types %}
+      <option value="{{ t.id }}" {{ 'selected' if t.id == target.participant_type_id }}>
+        {{ t.name }} – {{ t.fee_cents | euro }}
+      </option>
+      {% endfor %}
+    </select>
+
+    <label class="checkbox">
+      <input type="checkbox" name="hidden" {{ 'checked' if target.hidden }}>
+      Ei näytetä julkisesti
+    </label>
+
+    <button type="submit" class="primary">Tallenna korjaus</button>
+    <a href="/registrations" class="button">Peruuta</a>
+  </form>
+
+  <p class="muted small">
+    Rekisteröity {{ target.registered_at | pvm }}{% if target.registered_by_name %},
+    kirjasi {{ target.registered_by_name }}{% endif %}. Peritty maksu {{ target.fee_cents | euro }}
+    säilyy ennallaan, vaikka tyypin hintaa olisi myöhemmin muutettu.
+  </p>
+
+  {% if user.role == 'admin' %}
+  <hr>
+  <form method="post" action="/registrations/{{ target.id }}/delete"
+        onsubmit="return confirm('Poistetaanko {{ target.callsign }} lopullisesti näkyvistä?')">
+    <button type="submit" class="link danger">Poista rekisteröinti</button>
+  </form>
+  <p class="muted small">
+    Poisto piilottaa rekisteröinnin ja poistaa sen julkiselta puolelta. Tieto säilyy
+    auditointia varten, ja kutsumerkki vapautuu uudelleen rekisteröitäväksi.
+  </p>
+  {% endif %}
+</div>
+{% endblock %}

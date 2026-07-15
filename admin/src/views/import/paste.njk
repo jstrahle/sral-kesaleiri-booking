@@ -1,0 +1,31 @@
+{% extends "layout.njk" %}
+{% block content %}
+<div class="card">
+  <h1>Massatuonti</h1>
+
+  {% if error %}<p class="error">{{ error }}</p>{% endif %}
+
+  <p class="muted">
+    Maalaa rivit Excelissä ja kopioi (Ctrl+C / ⌘C), liitä sitten alle. Ensimmäinen
+    rivi voi olla otsikko (esim. <code>Kutsu Nimi Korttimaksu Käteinen Suostumus</code>) –
+    tunnistamme sarakkeet automaattisesti. Voit myös liittää CSV-tekstiä.
+  </p>
+
+  <form method="post" action="/import/preview">
+    <textarea name="data" rows="14" class="mono"
+      placeholder="Kutsu&#9;Nimi&#9;Korttimaksu&#9;Käteinen&#9;Suostumus&#10;OH3EX&#9;Jorma Heinonen&#9;&#9;0&#9;x" autofocus></textarea>
+    <button type="submit" class="primary">Esikatsele</button>
+  </form>
+
+  <div class="muted small">
+    <p>Huomioitavaa:</p>
+    <ul>
+      <li>Päivä ja kellonaika tulevat automaattisesti tuontihetkestä – Excelin aikoja ei käytetä.</li>
+      <li>Korttimaksu ja käteinen yhdistetään yhdeksi summaksi.</li>
+      <li>Summa kohdistetaan osallistujatyyppiin vain jos täsmälleen yksi tyyppi on sen hintainen. Muuten rivi merkitään <strong>Ei kohdistettu</strong>.</li>
+      <li>Suostumus-sarakkeessa <code>x</code> = julkaistaan; tyhjä tai muu = ei näytetä julkisesti.</li>
+      <li>Jo rekisteröidyt kutsumerkit ohitetaan – samaa ei tuoda kahdesti.</li>
+    </ul>
+  </div>
+</div>
+{% endblock %}

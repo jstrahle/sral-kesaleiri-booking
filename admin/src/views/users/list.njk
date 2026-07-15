@@ -1,0 +1,44 @@
+{% extends "layout.njk" %}
+{% block content %}
+<div class="card">
+  <div class="card-header">
+    <h1>Käyttäjät</h1>
+    <a href="/users/new" class="button primary">Uusi käyttäjä</a>
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Tunnus</th>
+        <th>Nimi</th>
+        <th>Rooli</th>
+        <th>Tila</th>
+        <th>Viimeisin kirjautuminen</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for u in users %}
+      <tr>
+        <td><a href="/users/{{ u.id }}">{{ u.username }}</a></td>
+        <td>{{ u.display_name }}</td>
+        <td>{{ 'Pääkäyttäjä' if u.role == 'admin' else 'Ilmoittautumispiste' }}</td>
+        <td>
+          {% if not u.is_active %}<span class="tag off">Suljettu</span>
+          {% elif u.locked_until %}<span class="tag warn">Lukittu</span>
+          {% else %}<span class="tag ok">Aktiivinen</span>{% endif %}
+        </td>
+        <td class="muted">{{ u.last_login_at | pvm }}</td>
+        <td>
+          {% if u.locked_until %}
+          <form method="post" action="/users/{{ u.id }}/unlock" class="inline">
+            <button type="submit" class="link">Avaa tili</button>
+          </form>
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

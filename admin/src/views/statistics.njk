@@ -1,0 +1,91 @@
+{% extends "layout.njk" %}
+{% block content %}
+
+<div class="stat-cards">
+  <div class="stat-card">
+    <span class="stat-value">{{ total.count }}</span>
+    <span class="stat-label">ilmoittautunutta yhteensä</span>
+  </div>
+  <div class="stat-card accent">
+    <span class="stat-value">{{ total.feeCents | euro }}</span>
+    <span class="stat-label">maksukertymä yhteensä</span>
+  </div>
+  <div class="stat-card">
+    <span class="stat-value">{{ total.today }}</span>
+    <span class="stat-label">tänään · {{ total.todayFeeCents | euro }}</span>
+  </div>
+</div>
+
+<div class="card">
+  <h1>Osallistujatyypeittäin</h1>
+  <table>
+    <thead>
+      <tr>
+        <th>Tyyppi</th>
+        <th class="num">Määrä</th>
+        <th class="num">Kertymä</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for t in types %}
+      <tr>
+        <td>
+          {{ t.typeName }}
+          {% if t.isSystem %}<span class="tag warn">järjestelmä</span>{% endif %}
+        </td>
+        <td class="num">{{ t.count }}</td>
+        <td class="num">{{ t.feeCents | euro }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+    <tfoot>
+      <tr>
+        <td>Yhteensä</td>
+        <td class="num">{{ total.count }}</td>
+        <td class="num">{{ total.feeCents | euro }}</td>
+      </tr>
+    </tfoot>
+  </table>
+  <p class="muted small">
+    Kertymä lasketaan kunkin rekisteröinnin tallennetusta maksusta – ei tyypin nykyhinnasta.
+    Näin “Ei kohdistettu” -rivien todelliset maksut näkyvät oikein, ja tyypin hinnan
+    muuttaminen ei muuta jo kirjattuja summia.
+  </p>
+</div>
+
+<div class="card">
+  <h1>Aikaväli</h1>
+  <form method="get" action="/stats" class="range-form">
+    <label for="alku">Alkaen</label>
+    <input type="date" id="alku" name="alku" value="{{ from }}">
+    <label for="loppu">Päättyen</label>
+    <input type="date" id="loppu" name="loppu" value="{{ to }}">
+    <button type="submit" class="button">Näytä</button>
+  </form>
+  <p class="range-result">
+    <strong>{{ range.count }}</strong> rekisteröintiä ·
+    <strong>{{ range.feeCents | euro }}</strong> kertymä
+    <span class="muted">({{ from }} – {{ to }})</span>
+  </p>
+</div>
+
+<div class="card">
+  <h1>Ilmoittautumispisteittäin</h1>
+  <table>
+    <thead>
+      <tr>
+        <th>Kirjaaja</th>
+        <th class="num">Rekisteröintejä</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for u in users %}
+      <tr>
+        <td>{{ u.displayName }}</td>
+        <td class="num">{{ u.count }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

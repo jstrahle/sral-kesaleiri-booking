@@ -1,0 +1,45 @@
+{% extends "layout.njk" %}
+{% block content %}
+<div class="card">
+  <div class="card-header">
+    <h1>Rekisteröinnit</h1>
+    <span class="muted">{{ counts.total }} ilmoittautunutta · {{ counts.today }} tänään</span>
+  </div>
+
+  <form method="get" action="/registrations" class="search">
+    <input type="text" name="q" value="{{ query }}" placeholder="Kutsumerkki tai nimi" autofocus>
+    <button type="submit" class="button">Hae</button>
+  </form>
+
+  {% if results.length == 0 %}
+    <p class="muted">Ei osumia.</p>
+  {% else %}
+  <table>
+    <thead>
+      <tr>
+        <th>Kutsumerkki</th>
+        <th>Nimi</th>
+        <th>Tyyppi</th>
+        <th>Maksu</th>
+        <th>Rekisteröity</th>
+        <th>Kirjasi</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for r in results %}
+      <tr>
+        <td class="call"><a href="/registrations/{{ r.id }}">{{ r.callsign }}</a></td>
+        <td>{{ r.name }}{% if r.hidden %} <span class="tag off">Piilotettu</span>{% endif %}</td>
+        <td>{{ r.type_name }}</td>
+        <td>{{ r.fee_cents | euro }}</td>
+        <td class="muted">{{ r.registered_at | pvm }}</td>
+        <td class="muted">{{ r.registered_by_name }}</td>
+        <td><a href="/registrations/{{ r.id }}">Korjaa</a></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% endif %}
+</div>
+{% endblock %}

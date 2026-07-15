@@ -1,0 +1,65 @@
+{% extends "layout.njk" %}
+{% block content %}
+<div class="card">
+  <div class="card-header">
+    <h1>Osallistujatyypit</h1>
+    <a href="/types/new" class="button primary">Uusi tyyppi</a>
+  </div>
+
+  {% if message %}<p class="error">{{ message }}</p>{% endif %}
+
+  {% if types.length == 0 %}
+    <p class="muted">Yhtään osallistujatyyppiä ei ole vielä luotu. Rekisteröinti vaatii vähintään yhden aktiivisen tyypin.</p>
+  {% else %}
+  <table>
+    <thead>
+      <tr>
+        <th>Nimi</th>
+        <th>Maksu</th>
+        <th>Tila</th>
+        <th>Rekisteröintejä</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for t in types %}
+      <tr>
+        <td>
+          <a href="/types/{{ t.id }}">{{ t.name }}</a>
+          {% if t.description %}<div class="muted small">{{ t.description }}</div>{% endif %}
+        </td>
+        <td>{{ t.fee_cents | euro }}</td>
+        <td>
+          {% if t.is_active %}<span class="tag ok">Aktiivinen</span>
+          {% else %}<span class="tag off">Ei aktiivinen</span>{% endif %}
+        </td>
+        <td>{{ t.registration_count }}</td>
+        <td class="actions">
+          <form method="post" action="/types/{{ t.id }}/active" class="inline">
+            {% if t.is_active %}
+              <button type="submit" class="link">Poista käytöstä</button>
+            {% else %}
+              <input type="hidden" name="isActive" value="on">
+              <button type="submit" class="link">Ota käyttöön</button>
+            {% endif %}
+          </form>
+          {% if t.registration_count == 0 %}
+          <form method="post" action="/types/{{ t.id }}/delete" class="inline"
+                onsubmit="return confirm('Poistetaanko tyyppi {{ t.name }}?')">
+            <button type="submit" class="link danger">Poista</button>
+          </form>
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <p class="muted small">
+    Tyyppiä, johon on jo rekisteröity osallistujia, ei voi poistaa – vanhat rekisteröinnit eivät saa
+    rikkoutua. Merkitse se sen sijaan ei-aktiiviseksi, jolloin sitä ei enää tarjota uusille
+    rekisteröinneille.
+  </p>
+  {% endif %}
+</div>
+{% endblock %}

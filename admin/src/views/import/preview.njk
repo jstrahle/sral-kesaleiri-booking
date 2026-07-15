@@ -1,0 +1,63 @@
+{% extends "layout.njk" %}
+{% block content %}
+<div class="card">
+  <h1>Esikatselu</h1>
+
+  <div class="import-summary">
+    <span class="pill new">{{ preview.summary.toImport }} tuodaan</span>
+    {% if preview.summary.unassigned > 0 %}<span class="pill warn">{{ preview.summary.unassigned }} ei kohdistettu</span>{% endif %}
+    {% if preview.summary.duplicates > 0 %}<span class="pill dup">{{ preview.summary.duplicates }} kaksoiskappaletta</span>{% endif %}
+    {% if preview.summary.errors > 0 %}<span class="pill err">{{ preview.summary.errors }} virheellistä</span>{% endif %}
+  </div>
+
+  <table class="import-table">
+    <thead>
+      <tr>
+        <th>Rivi</th>
+        <th>Kutsumerkki</th>
+        <th>Nimi</th>
+        <th>Summa</th>
+        <th>Tyyppi</th>
+        <th>Julkinen</th>
+        <th>Tila</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for r in preview.rows %}
+      <tr class="row-{{ r.status }}">
+        <td class="muted">{{ r.lineNumber }}</td>
+        <td class="call">{{ r.callsign or '–' }}</td>
+        <td>{{ r.name or '–' }}</td>
+        <td>{{ r.feeCents | euro }}</td>
+        <td>{% if r.assigned %}{{ r.typeName }}{% else %}<span class="tag warn">{{ r.typeName }}</span>{% endif %}</td>
+        <td>{% if r.consent %}Kyllä{% else %}<span class="tag off">Ei</span>{% endif %}</td>
+        <td>
+          {% if r.status == 'new' %}<span class="tag ok">Tuodaan</span>
+          {% elif r.status == 'duplicate_db' %}<span class="tag dup">Jo rekisteröity</span>
+          {% elif r.status == 'duplicate_internal' %}<span class="tag dup">Toisto aineistossa</span>
+          {% else %}<span class="tag err">{{ r.errors | join(', ') }}</span>{% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <div class="import-actions">
+    <form method="post" action="/import/commit">
+      <textarea name="data" hidden>{{ data | e }}</textarea>
+      <button type="submit" class="primary" {{ 'disabled' if preview.summary.toImport == 0 }}>
+        Tuo {{ preview.summary.toImport }} riviä
+      </button>
+    </form>
+    <a href="/import" class="button">Peruuta ja aloita alusta</a>
+  </div>
+
+  {% if preview.summary.unassigned > 0 %}
+  <p class="muted small">
+    <strong>Ei kohdistettu</strong> -rivit tuodaan, mutta niiden osallistujatyyppi jäi
+    tunnistamatta (summalle ei löytynyt yksikäsitteistä tyyppiä). Voit korjata tyypin
+    jälkikäteen rekisteröinnin muokkausnäkymästä.
+  </p>
+  {% endif %}
+</div>
+{% endblock %}

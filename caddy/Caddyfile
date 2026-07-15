@@ -1,0 +1,60 @@
+{
+	email {$ACME_EMAIL}
+}
+
+# Yhteiset turvaotsakkeet. HUOM: Referrer-Policy asetetaan sivustokohtaisesti,
+# koska hallintapuoli tarvitsee Referer-otsakkeen CSRF-tarkistukseen.
+(turva) {
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "DENY"
+		-Server
+	}
+}
+
+# Hallintapuoli - oma verkkotunnus
+{$ADMIN_DOMAIN} {
+	import turva
+	# same-origin: Referer sailyy omalla sivustolla (CSRF-tarkistuksen varalahde),
+	# mutta ei vuoda ulkopuolisille. no-referrer saisi selaimen lahettamaan
+	# Origin: null lomakkeen POST-pyynnossa, mika kaataisi kirjautumisen.
+	header Referrer-Policy "same-origin"
+	encode zstd gzip
+	reverse_proxy admin:3000
+	log {
+		output stdout
+		format console
+	}
+}
+
+# Julkinen verkkopalvelu
+{$PUBLIC_DOMAIN} {
+	import turva
+	# Julkisella puolella ei ole lomakkeita eika CSRF-tarvetta, joten tiukin arvo.
+	header Referrer-Policy "no-referrer"
+	encode zstd gzip
+
+	# SSE-kanava: ei puskurointia
+	@sse path /events
+	handle @sse {
+		reverse_proxy public:3000 {
+			flush_interval -1
+		}
+	}
+
+	# Sisainen synkronointipaate ei saa nakya internetiin
+	@internal path /internal/*
+	handle @internal {
+		respond 404
+	}
+
+	handle {
+		reverse_proxy public:3000
+	}
+
+	log {
+		output stdout
+		format console
+	}
+}

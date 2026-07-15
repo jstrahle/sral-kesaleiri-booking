@@ -1,0 +1,20 @@
+{% extends "layout.njk" %}
+{% block content %}
+<div class="card">
+  <h1>Tietosuojaseloste</h1>
+
+  {% if saved %}<p class="ok">Tietosuojaseloste tallennettu ja julkaistu.</p>{% endif %}
+  {% if error %}<p class="error">{{ error }}</p>{% endif %}
+
+  <p class="muted">
+    Teksti näkyy julkisella sivulla osoitteessa <code>/tietosuoja</code>. Muotoiluja ei
+    käytetä – rivinvaihdot säilyvät sellaisenaan. Tyhjä teksti tarkoittaa, ettei
+    selostetta ole vielä julkaistu.
+  </p>
+
+  <form method="post" action="/privacy">
+    <textarea name="content" rows="24" class="mono" autofocus>{{ content }}</textarea>
+    <button type="submit" class="primary">Tallenna ja julkaise</button>
+  </form>
+</div>
+{% endblock %}

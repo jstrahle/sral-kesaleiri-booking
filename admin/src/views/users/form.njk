@@ -1,0 +1,49 @@
+{% extends "layout.njk" %}
+{% block content %}
+<div class="card narrow">
+  <h1>{{ 'Muokkaa käyttäjää' if target else 'Uusi käyttäjä' }}</h1>
+
+  {% if error %}<p class="error">{{ error }}</p>{% endif %}
+
+  <form method="post" action="{{ '/users/' + target.id if target else '/users' }}">
+    {% if target %}
+      <label>Käyttäjätunnus</label>
+      <input type="text" value="{{ target.username }}" disabled>
+    {% else %}
+      <label for="username">Käyttäjätunnus</label>
+      <input type="text" id="username" name="username" autocomplete="off" required>
+    {% endif %}
+
+    <label for="displayName">Nimi</label>
+    <input type="text" id="displayName" name="displayName" value="{{ target.display_name if target }}">
+
+    <label for="role">Rooli</label>
+    <select id="role" name="role">
+      <option value="staff" {{ 'selected' if target and target.role == 'staff' }}>Ilmoittautumispiste</option>
+      <option value="admin" {{ 'selected' if target and target.role == 'admin' }}>Pääkäyttäjä</option>
+    </select>
+
+    {% if not target %}
+      <label for="password">Salasana (vähintään 12 merkkiä)</label>
+      <input type="password" id="password" name="password" autocomplete="new-password" minlength="12" required>
+    {% else %}
+      <label class="checkbox">
+        <input type="checkbox" name="isActive" {{ 'checked' if target.is_active }}> Tili on käytössä
+      </label>
+    {% endif %}
+
+    <button type="submit" class="primary">Tallenna</button>
+    <a href="/users" class="button">Peruuta</a>
+  </form>
+
+  {% if target %}
+  <hr>
+  <h2>Aseta uusi salasana</h2>
+  <form method="post" action="/users/{{ target.id }}/password">
+    <label for="password">Uusi salasana (vähintään 12 merkkiä)</label>
+    <input type="password" id="password" name="password" autocomplete="new-password" minlength="12" required>
+    <button type="submit">Aseta salasana</button>
+  </form>
+  {% endif %}
+</div>
+{% endblock %}

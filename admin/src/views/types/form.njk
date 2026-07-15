@@ -1,0 +1,38 @@
+{% extends "layout.njk" %}
+{% block content %}
+<div class="card narrow">
+  <h1>{{ 'Muokkaa osallistujatyyppiä' if target else 'Uusi osallistujatyyppi' }}</h1>
+
+  {% if error %}<p class="error">{{ error }}</p>{% endif %}
+
+  <form method="post" action="{{ '/types/' + target.id if target else '/types' }}">
+    <label for="name">Nimi</label>
+    <input type="text" id="name" name="name" value="{{ target.name if target }}" autofocus required>
+
+    <label for="description">Kuvaus (valinnainen)</label>
+    <input type="text" id="description" name="description" value="{{ target.description if target }}">
+
+    <label for="fee">Osallistumismaksu (€)</label>
+    <input type="text" id="fee" name="fee" inputmode="decimal"
+           value="{{ target.fee_cents | euroinput if target else '0,00' }}" required>
+
+    <label for="sortOrder">Järjestysnumero</label>
+    <input type="number" id="sortOrder" name="sortOrder" value="{{ target.sort_order if target else 0 }}">
+
+    <label class="checkbox">
+      <input type="checkbox" name="isActive" {{ 'checked' if not target or target.is_active }}>
+      Tarjotaan rekisteröintilomakkeella
+    </label>
+
+    <button type="submit" class="primary">Tallenna</button>
+    <a href="/types" class="button">Peruuta</a>
+  </form>
+
+  {% if target and target.fee_cents %}
+  <p class="muted small">
+    Maksun muuttaminen ei muuta aiempia rekisteröintejä takautuvasti – ne on jo peritty leirillä.
+    Muutos vaikuttaa maksukertymän laskentaan.
+  </p>
+  {% endif %}
+</div>
+{% endblock %}
